@@ -1,0 +1,3 @@
+{
+    "lgmSettingsToggle": { "cat": "general", "order": 150, "ctx": "tlua", "onDown": "lgm_luuksGraphicsMod.toggleUI()", "actionMap": "Global", "title": "Toggle LGM Settings UI", "desc": "Toggles the settings UI for Luuks Graphics Mod" }}
+}
