@@ -50,7 +50,7 @@ local function loadShaderPostFX(path, name)
         fx:setField("texture", 1, "#prepass[Depth]")
         -- fx:setField("texture", 2, "#prepass[RT0]")
 
-        fx:setField("time", 0, 0.0)
+        -- fx:setField("totalTime", 0, 0.0)
 
         fx:registerObject("LGM_" .. name .. "_Fx")
     end
