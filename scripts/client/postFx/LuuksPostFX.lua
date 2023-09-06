@@ -12,11 +12,19 @@ local function updateUniforms(selectedPack, dt)
 
     totalTime = totalTime + dt
 
+    local tod = core_environment.getTimeOfDay()
+
+    -- local camForward = core_camera.getForward()
+    -- local camPosition = core_camera.getPosition()
+    -- camPosition = { x = camPosition.x, y = camPosition.y, z = camPosition.z }
+    -- local camFovDeg = core_camera.getFovDeg()
+
     for i, shader in pairs(LuuksPostFX.shaderPacks[selectedPack].shaders) do
         local fx = scenetree.findObject("LGM_" .. shader.name .. "_Fx")
         if fx then
             fx:setShaderConst("$totalTime", totalTime)
-            fx:setShaderConst("$timeOfDay", core_environment.getTimeOfDay().time)
+            fx:setShaderConst("$timeOfDay", tod.time)
+            -- fx:setShaderConst("$camPos", camPosition)
         end
     end
 end
@@ -39,7 +47,7 @@ local function loadShaderPostFX(path, name)
     stateBlock.samplersDefined = true
     stateBlock:setField("samplerStates", 0, "SamplerClampLinear")
     stateBlock:setField("samplerStates", 1, "SamplerClampLinear")
-    stateBlock:setField("samplerStates", 2, "SamplerClampLinear")
+    stateBlock:setField("samplerStates", 2, "SamplerClampPoint")
     stateBlock:registerObject("LGM_" .. name .. "_StateBlock")
 
     local shader = scenetree.findObject("LGM_" .. name .. "_ShaderData")
