@@ -1,6 +1,7 @@
 local LuuksPostFX = {}
 
 local rootPath = "shaderpacks"
+local tempPath = "temp/shaders/lgm_tmp"
 
 local totalTime = 0
 
@@ -13,8 +14,9 @@ local function updateUniforms(selectedPack, dt)
 
     for i, shader in pairs(LuuksPostFX.shaderPacks[selectedPack].shaders) do
         local fx = scenetree.findObject("LGM_" .. shader.name .. "_Fx")
-        if not fx then
+        if fx then
             fx:setShaderConst("$totalTime", totalTime)
+            fx:setShaderConst("$timeOfDay", core_environment.getTimeOfDay().time)
         end
     end
 end
@@ -23,8 +25,23 @@ local function isFile(path)
     return FS:stat(path).filetype ~= "dir"
 end
 
+local function removeOldShaders()
+    if FS:directoryExists(tempPath) then
+        FS:directoryRemove(tempPath)
+    end
+end
+
 local function loadShaderPostFX(path, name)
     print("[LGM] Loading " .. name .. " (" .. path .. ")")
+    local pfxDefaultStateBlock = scenetree.findObject("PFX_DefaultStateBlock")
+    stateBlock = createObject("GFXStateBlockData")
+    stateBlock:inheritParentFields(pfxDefaultStateBlock)
+    stateBlock.samplersDefined = true
+    stateBlock:setField("samplerStates", 0, "SamplerClampLinear")
+    stateBlock:setField("samplerStates", 1, "SamplerClampLinear")
+    stateBlock:setField("samplerStates", 2, "SamplerClampLinear")
+    stateBlock:registerObject("LGM_" .. name .. "_StateBlock")
+
     local shader = scenetree.findObject("LGM_" .. name .. "_ShaderData")
     if not shader then
         shader = createObject("ShaderData")
@@ -44,10 +61,13 @@ local function loadShaderPostFX(path, name)
         -- fx:setField("renderBin", 0, "AfterPostFX")
         fx.renderPriority = 0.8
 
+        fx:setField("stateBlock", 0, "LGM_" .. name .. "_StateBlock")
+
         fx:setField("shader", 0, "LGM_" .. name .. "_ShaderData")
         fx:setField("stateBlock", 0, "PFX_DefaultStateBlock")
         fx:setField("texture", 0, "$backBuffer")
         fx:setField("texture", 1, "#prepass[Depth]")
+        fx:setField("texture", 2, "scripts/client/postFx/rgba_noise_small.dds")
         -- fx:setField("texture", 2, "#prepass[RT0]")
 
         -- fx:setField("totalTime", 0, 0.0)
@@ -71,7 +91,7 @@ end
 local function loadShaders()
     print("Loading shaders from " .. rootPath .. "...")
     if not FS:directoryExists(rootPath) then FS:directoryCreate(rootPath) end
-    if not FS:directoryExists("temp/shaders/lgm_tmp") then FS:directoryCreate("temp/shaders/lgm_tmp") end
+    if not FS:directoryExists(tempPath) then FS:directoryCreate(tempPath) end
 
     LuuksPostFX.shaderPacks = {}
 
@@ -82,7 +102,7 @@ local function loadShaders()
                 for j, file in pairs(FS:directoryList(item .. "/postFx")) do
                     if isFile(file) then -- TODO: Check file extension
                         local fileHash = FS:hashFile(file)
-                        local shaderPath = file:gsub(rootPath, "temp/shaders/lgm_tmp"):gsub(".hlsl", fileHash .. ".hlsl")
+                        local shaderPath = file:gsub(rootPath, tempPath):gsub(".hlsl", fileHash .. ".hlsl")
                         FS:copyFile(file, shaderPath)
                         local shaderName = strsplit(shaderPath, "/")
                         shaderName = shaderName[#shaderName]:gsub(".hlsl", "")
@@ -96,7 +116,6 @@ local function loadShaders()
                     end
                 end
             end
-            -- table.insert(LuuksPostFX.shaderPacks, pack)
             LuuksPostFX.shaderPacks[item] = pack
         end
     end
@@ -126,6 +145,7 @@ local function reloadShaders()
     loadShaders()
 end
 
+removeOldShaders()
 loadShaders()
 
 LuuksPostFX.reloadShaders = reloadShaders
