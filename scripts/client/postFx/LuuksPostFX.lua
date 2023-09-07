@@ -41,14 +41,17 @@ end
 
 local function loadShaderPostFX(path, name)
     print("[LGM] Loading " .. name .. " (" .. path .. ")")
-    local pfxDefaultStateBlock = scenetree.findObject("PFX_DefaultStateBlock")
-    stateBlock = createObject("GFXStateBlockData")
-    stateBlock:inheritParentFields(pfxDefaultStateBlock)
-    stateBlock.samplersDefined = true
-    stateBlock:setField("samplerStates", 0, "SamplerClampLinear")
-    stateBlock:setField("samplerStates", 1, "SamplerClampLinear")
-    stateBlock:setField("samplerStates", 2, "SamplerClampPoint")
-    stateBlock:registerObject("LGM_" .. name .. "_StateBlock")
+    local stateBlock = scenetree.findObject("LGM_" .. name .. "_StateBlock")
+    if not stateBlock then
+        local pfxDefaultStateBlock = scenetree.findObject("PFX_DefaultStateBlock")
+        stateBlock = createObject("GFXStateBlockData")
+        stateBlock:inheritParentFields(pfxDefaultStateBlock)
+        stateBlock.samplersDefined = true
+        stateBlock:setField("samplerStates", 0, "SamplerClampLinear")
+        stateBlock:setField("samplerStates", 1, "SamplerClampLinear")
+        stateBlock:setField("samplerStates", 2, "SamplerClampPoint")
+        stateBlock:registerObject("LGM_" .. name .. "_StateBlock")
+    end
 
     local shader = scenetree.findObject("LGM_" .. name .. "_ShaderData")
     if not shader then
@@ -84,18 +87,6 @@ local function loadShaderPostFX(path, name)
     end
 end
 
--- From: https://stackoverflow.com/a/7615129
-function strsplit (inputstr, sep)
-        if sep == nil then
-            sep = "%s"
-        end
-        local t={}
-        for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-            table.insert(t, str)
-        end
-        return t
-end
-
 local function loadShaders()
     print("Loading shaders from " .. rootPath .. "...")
     if not FS:directoryExists(rootPath) then FS:directoryCreate(rootPath) end
@@ -112,7 +103,7 @@ local function loadShaders()
                         local fileHash = FS:hashFile(file)
                         local shaderPath = file:gsub(rootPath, tempPath):gsub(".hlsl", fileHash .. ".hlsl")
                         FS:copyFile(file, shaderPath)
-                        local shaderName = strsplit(shaderPath, "/")
+                        local shaderName = split(shaderPath, "/")
                         shaderName = shaderName[#shaderName]:gsub(".hlsl", "")
                         shaderName = shaderName .. fileHash
                         loadShaderPostFX(shaderPath, shaderName)
@@ -137,16 +128,20 @@ local function reloadShaders()
     for i, pack in pairs(LuuksPostFX.shaderPacks) do
         for j, shader in pairs(pack.shaders) do
             local fx = scenetree.findObject("LGM_" .. shader.name .. "_Fx")
-            if fx ~= nil then
+            if fx then
                 fx.isEnabled = false
                 fx:delete()
             end
             local shader = scenetree.findObject("LGM_" .. shader.name .. "_ShaderData")
-            if shader ~= nil then
+            if shader then
                 shader:delete()
             end
+            -- local stateBlock = scenetree.findObject("LGM_" .. shader.name .. "_StateBlock")
+            -- if stateBlock then
+            --     stateBlock:delete()
+            -- end
 
-            -- FS:removeFile(shader.shaderPath) -- TODO: Perhaps only disabling
+            -- FS:removeFile(shader.shaderPath)
         end
     end
 
