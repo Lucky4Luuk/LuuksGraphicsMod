@@ -6,6 +6,7 @@ local im = ui_imgui
 local showSettings = nil
 
 local selectedPack = settings.getValue("LGM_SelectedPack", "None")
+local settingsValues = {}
 
 local function createPFX()
     if not LuuksPostFX then
@@ -13,6 +14,20 @@ local function createPFX()
     end
 
     return LuuksPostFX ~= nil
+end
+
+local function setDefaultSettings()
+    local pack = LuuksPostFX.shaderPacks[selectedPack] or { shaders = {} }
+    for i, shader in pairs(pack.shaders) do
+        local shaderSettings = shader.settings or {}
+        if shaderSettings.fields ~= nil then
+            settingsValues[shader.name] = settingsValues[shader.name] or {}
+            for field, fieldData in pairs(shaderSettings.fields) do
+                local default = fieldData.default or (fieldData.min + fieldData.max) / 2
+                settingsValues[shader.name][field] = settingsValues[shader.name][field] or default
+            end
+        end
+    end
 end
 
 local function onClientPostStartMission()
@@ -33,6 +48,7 @@ local function drawUI()
                 if im.Selectable1(name, isSelected) then
                     selectedPack = name
                     LuuksPostFX.updateEnabledShaders(selectedPack)
+                    setDefaultSettings()
                     settings.setValue("LGM_SelectedPack", selectedPack)
                     settings.save()
                 else
@@ -47,6 +63,27 @@ local function drawUI()
 
             im.EndCombo()
         end
+        im.Separator()
+
+        -- Draw settings
+        local pack = LuuksPostFX.shaderPacks[selectedPack] or { shaders = {} }
+        for i, shader in pairs(pack.shaders) do
+            im.Text(shader.disp)
+            local shaderSettings = shader.settings or {}
+            if shaderSettings.fields ~= nil then
+                settingsValues[shader.name] = settingsValues[shader.name] or {}
+                for field, fieldData in pairs(shaderSettings.fields) do
+                    local default = fieldData.default or (fieldData.min + fieldData.max) / 2
+                    settingsValues[shader.name][field] = settingsValues[shader.name][field] or default
+                    local ptr = im.FloatPtr(settingsValues[shader.name][field])
+                    if im.SliderFloat(fieldData.disp, ptr, fieldData.min, fieldData.max) then
+                        settingsValues[shader.name][field] = ptr[0]
+                    end
+                end
+            end
+            im.Separator()
+        end
+        if #(pack.shaders) == 0 then im.Separator() end
 
         if im.Button("Reload shaderpacks") then
             LuuksPostFX.reloadShaders()
@@ -59,10 +96,15 @@ local function drawUI()
 end
 
 local function onUpdate(dt)
-    if showSettings == nil then showSettings = im.BoolPtr(false) end
-    if worldReadyState == 2 then LuuksPostFX.updateEnabledShaders(selectedPack) end
+    if not LuuksPostFX then return end
 
-    LuuksPostFX.updateUniforms(selectedPack, dt)
+    if showSettings == nil then showSettings = im.BoolPtr(false) end
+    if worldReadyState == 2 then
+        LuuksPostFX.updateEnabledShaders(selectedPack)
+        setDefaultSettings()
+    end
+
+    LuuksPostFX.updateUniforms(selectedPack, dt, settingsValues)
 
     drawUI()
 end

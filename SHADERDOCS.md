@@ -10,7 +10,7 @@ Inside this folder, you'll create subfolders and shader files (`.hlsl`) to creat
 <TODO> Example settings file:
 ```json
 {
-
+    "todo": "i still have to think of what to put here :)"
 }
 ```
 
@@ -34,8 +34,7 @@ Inside this folder, you'll create subfolders and shader files (`.hlsl`) to creat
 ### PostFX
 PostFX shaders are located inside the `your_pack/postFx` folder (note the uppercase F).
 
-Their possible uniforms are as follows:
-
+##### Uniforms
 type | name | description
 -----|------|------------
 `texture0` | `backBuffer` | Contains the image currently on screen
@@ -44,8 +43,5 @@ type | name | description
  | | |
 `float` | `totalTime` | Time in seconds since shader was loaded
 `float` | `timeOfDay` | World time (0 = noon, 0.5 = midnight, 1.0 = noon the next day)
-
-##### Vanilla BeamNG shader uniforms.
-type | name | description
------|------|------------
+ | | |
 `float3` | `eyePosWorld` | Current position of the camera in world space

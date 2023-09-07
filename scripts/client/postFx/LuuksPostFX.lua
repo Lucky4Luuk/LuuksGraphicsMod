@@ -7,6 +7,11 @@ local totalTime = 0
 
 LuuksPostFX.shaderPacks = {}
 
+-- From: http://lua-users.org/wiki/StringRecipes
+local function ends_with(str, ending)
+    return ending == "" or str:sub(-#ending) == ending
+end
+
 local function updateEnabledShaders(selectedPack)
     for i, pack in pairs(LuuksPostFX.shaderPacks) do
         local enabled = pack.name == selectedPack
@@ -19,7 +24,7 @@ local function updateEnabledShaders(selectedPack)
     end
 end
 
-local function updateUniforms(selectedPack, dt)
+local function updateUniforms(selectedPack, dt, settingsValues)
     if LuuksPostFX.shaderPacks[selectedPack] == nil then return end
 
     totalTime = totalTime + dt
@@ -37,6 +42,10 @@ local function updateUniforms(selectedPack, dt)
             fx:setShaderConst("$totalTime", totalTime)
             fx:setShaderConst("$timeOfDay", tod.time)
             -- fx:setShaderConst("$camPos", camPosition)
+
+            for field, value in pairs(settingsValues[shader.name] or {}) do
+                fx:setShaderConst("$" .. field, value)
+            end
         end
     end
 end
@@ -111,18 +120,36 @@ local function loadShaders()
             local pack = { name = item, shaders = {} }
             if FS:directoryExists(item .. "/postFx") then
                 for j, file in pairs(FS:directoryList(item .. "/postFx")) do
-                    if isFile(file) then -- TODO: Check file extension
+                    if isFile(file) and ends_with(file, ".hlsl") then
+                        local settingsPath = file:gsub(".hlsl", ".json")
+                        local shaderSettings = {}
+                        if FS:fileExists(settingsPath) then
+                            -- TODO: Should probably use FS:openFile() but I couldn't quickly figure out what args it wants
+                            local handle = io.open(settingsPath, "r")
+                            if handle then
+                                local content = handle:read("*all")
+                                print(content)
+                                shaderSettings = json.decode(content) -- TODO: If this errors, loading the game breaks entirely. Find a fix for that
+                                dump(shaderSettings)
+                                print("--------------------------------------------------------------------------")
+                                handle:close(handle)
+                            end
+                        end
+
                         local fileHash = FS:hashFile(file)
                         local shaderPath = file:gsub(rootPath, tempPath):gsub(".hlsl", fileHash .. ".hlsl")
                         FS:copyFile(file, shaderPath)
                         local shaderName = split(shaderPath, "/")
                         shaderName = shaderName[#shaderName]:gsub(".hlsl", "")
+                        local dispName = shaderName
                         shaderName = shaderName .. fileHash
                         loadShaderPostFX(shaderPath, shaderName)
                         table.insert(pack.shaders, {
                             name = shaderName,
+                            disp = dispName,
                             path = shaderPath,
-                            category = "postFx"
+                            category = "postFx",
+                            settings = shaderSettings
                         })
                     end
                 end
