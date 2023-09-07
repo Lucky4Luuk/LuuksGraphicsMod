@@ -44,3 +44,8 @@ type | name | description
  | | |
 `float` | `totalTime` | Time in seconds since shader was loaded
 `float` | `timeOfDay` | World time (0 = noon, 0.5 = midnight, 1.0 = noon the next day)
+
+##### Vanilla BeamNG shader uniforms.
+type | name | description
+-----|------|------------
+`float3` | `eyePosWorld` | Current position of the camera in world space

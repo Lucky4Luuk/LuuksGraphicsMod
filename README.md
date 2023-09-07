@@ -4,6 +4,7 @@ A graphics mod for BeamNG, capable of loading custom shaderpacks.
 ## Planned Features
 - Custom settings for shaderpacks.
 - Disabling vanilla effects through shaderpack settings.
+- MAYBE: Loading shaderpacks from zip files.
 
 ## Known Issues
 - When reloading shaders, the uniforms won't update anymore. A temporary fix is to switch to a different shader, and reload shaders again, and then switch back.
