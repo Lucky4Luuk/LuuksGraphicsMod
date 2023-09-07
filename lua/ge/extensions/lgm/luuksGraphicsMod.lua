@@ -23,18 +23,6 @@ local function onExtensionLoaded()
     log("I", "", "Luuks Graphics Mod extension loaded!")
 end
 
-local function updateEnabledShaders()
-    for i, pack in pairs(LuuksPostFX.shaderPacks) do
-        local enabled = pack.name == selectedPack
-        for j, shader in pairs(pack.shaders) do
-            local fx = scenetree.findObject("LGM_" .. shader.name .. "_Fx")
-            if fx ~= nil then
-                fx.isEnabled = enabled
-            end
-        end
-    end
-end
-
 local function drawUI()
     if not showSettings[0] then return end
 
@@ -44,7 +32,7 @@ local function drawUI()
                 local isSelected = selectedPack == name
                 if im.Selectable1(name, isSelected) then
                     selectedPack = name
-                    updateEnabledShaders()
+                    LuuksPostFX.updateEnabledShaders(selectedPack)
                     settings.setValue("LGM_SelectedPack", selectedPack)
                     settings.save()
                 else
@@ -62,7 +50,9 @@ local function drawUI()
 
         if im.Button("Reload shaderpacks") then
             LuuksPostFX.reloadShaders()
+            LuuksPostFX.updateEnabledShaders(selectedPack)
         end
+        im.Text("WARNING: If a shader doesn't work properly after\nreloading, please switch shaders, reload shaders again\nand switch back!")
 
         im.End()
     end
@@ -70,7 +60,7 @@ end
 
 local function onUpdate(dt)
     if showSettings == nil then showSettings = im.BoolPtr(false) end
-    if worldReadyState == 2 then updateEnabledShaders() end
+    if worldReadyState == 2 then LuuksPostFX.updateEnabledShaders(selectedPack) end
 
     LuuksPostFX.updateUniforms(selectedPack, dt)
 

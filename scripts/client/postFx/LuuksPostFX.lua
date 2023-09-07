@@ -7,6 +7,18 @@ local totalTime = 0
 
 LuuksPostFX.shaderPacks = {}
 
+local function updateEnabledShaders(selectedPack)
+    for i, pack in pairs(LuuksPostFX.shaderPacks) do
+        local enabled = pack.name == selectedPack
+        for j, shader in pairs(pack.shaders) do
+            local fx = scenetree.findObject("LGM_" .. shader.name .. "_Fx")
+            if fx ~= nil then
+                fx.isEnabled = enabled
+            end
+        end
+    end
+end
+
 local function updateUniforms(selectedPack, dt)
     if LuuksPostFX.shaderPacks[selectedPack] == nil then return end
 
@@ -122,18 +134,18 @@ local function loadShaders()
     print("Loaded " .. #LuuksPostFX.shaderPacks .. " shaderpacks!")
 end
 
-local function reloadShaders()
-    print("Reloading shaders...")
-
+local function reloadShadersInternal()
     for i, pack in pairs(LuuksPostFX.shaderPacks) do
         for j, shader in pairs(pack.shaders) do
             local fx = scenetree.findObject("LGM_" .. shader.name .. "_Fx")
             if fx then
                 fx.isEnabled = false
+                fx:unregisterObject()
                 fx:delete()
             end
             local shader = scenetree.findObject("LGM_" .. shader.name .. "_ShaderData")
             if shader then
+                shader:unregisterObject()
                 shader:delete()
             end
             -- local stateBlock = scenetree.findObject("LGM_" .. shader.name .. "_StateBlock")
@@ -144,14 +156,21 @@ local function reloadShaders()
             -- FS:removeFile(shader.shaderPath)
         end
     end
+end
 
+local function reloadShaders()
+    print("Reloading shaders...")
+
+    reloadShadersInternal()
     loadShaders()
+    updateEnabledShaders("None")
 end
 
 removeOldShaders()
 loadShaders()
 
 LuuksPostFX.reloadShaders = reloadShaders
+LuuksPostFX.updateEnabledShaders = updateEnabledShaders
 LuuksPostFX.updateUniforms = updateUniforms
 
 rawset(_G, "LuuksPostFX", LuuksPostFX)
