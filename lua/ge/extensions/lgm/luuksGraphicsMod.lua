@@ -16,7 +16,7 @@ local function createPFX()
     return LuuksPostFX ~= nil
 end
 
-local function setDefaultSettings()
+local function setDefaultSettings(forceDefault)
     local pack = LuuksPostFX.shaderPacks[selectedPack] or { shaders = {} }
     for i, shader in pairs(pack.shaders) do
         local shaderSettings = shader.settings or {}
@@ -25,6 +25,7 @@ local function setDefaultSettings()
             for field, fieldData in pairs(shaderSettings.fields) do
                 local default = fieldData.default or (fieldData.min + fieldData.max) / 2
                 settingsValues[shader.name][field] = settingsValues[shader.name][field] or default
+                if forceDefault then settingsValues[shader.name][field] = default end
             end
         end
     end
@@ -48,7 +49,7 @@ local function drawUI()
                 if im.Selectable1(name, isSelected) then
                     selectedPack = name
                     LuuksPostFX.updateEnabledShaders(selectedPack)
-                    setDefaultSettings()
+                    setDefaultSettings(true)
                     settings.setValue("LGM_SelectedPack", selectedPack)
                     settings.save()
                 else

@@ -70,7 +70,8 @@ local function loadShaderPostFX(path, name)
         stateBlock.samplersDefined = true
         stateBlock:setField("samplerStates", 0, "SamplerClampLinear")
         stateBlock:setField("samplerStates", 1, "SamplerClampLinear")
-        stateBlock:setField("samplerStates", 2, "SamplerClampPoint")
+        stateBlock:setField("samplerStates", 2, "SamplerClampLinear")
+        stateBlock:setField("samplerStates", 3, "SamplerClampPoint")
         stateBlock:registerObject("LGM_" .. name .. "_StateBlock")
     end
 
@@ -98,9 +99,9 @@ local function loadShaderPostFX(path, name)
         fx:setField("shader", 0, "LGM_" .. name .. "_ShaderData")
         fx:setField("stateBlock", 0, "PFX_DefaultStateBlock")
         fx:setField("texture", 0, "$backBuffer")
-        fx:setField("texture", 1, "#prepass[Depth]")
-        fx:setField("texture", 2, "scripts/client/postFx/rgba_noise_small.dds")
-        -- fx:setField("texture", 2, "#prepass[RT0]")
+        fx:setField("texture", 1, "#prepass[RT0]")
+        fx:setField("texture", 2, "#prepass[Depth]")
+        fx:setField("texture", 3, "scripts/client/postFx/rgba_noise_small.dds")
 
         -- fx:setField("totalTime", 0, 0.0)
 

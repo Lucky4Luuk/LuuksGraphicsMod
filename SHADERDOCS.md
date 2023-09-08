@@ -38,8 +38,9 @@ PostFX shaders are located inside the `your_pack/postFx` folder (note the upperc
 type | name | description
 -----|------|------------
 `texture0` | `backBuffer` | Contains the image currently on screen
-`texture1` | `prepassDepthBuffer` | Contains the prepass depth buffer
-`texture2` | `rgba_noise_small` | Contains the RGBA noise small texture from shadertoy
+`texture1` | `prepassBuffer` | TODO
+`texture2` | `prepassDepthBuffer` | Contains the prepass depth buffer
+`texture3` | `rgba_noise_small` | Contains the RGBA noise small texture from shadertoy
  | | |
 `float` | `totalTime` | Time in seconds since shader was loaded
 `float` | `timeOfDay` | World time (0 = noon, 0.5 = midnight, 1.0 = noon the next day)
