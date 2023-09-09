@@ -7,14 +7,20 @@ Inside this folder, you'll create subfolders and shader files (`.hlsl`) to creat
 
 ## Shader Settings
 ### General
-<TODO> Example settings file:
+Example settings file:
 ```json
 {
-    "todo": "i still have to think of what to put here :)"
+    "postFx": [
+        "pass1",
+        "pass2"
+    ]
 }
 ```
+The `postFx` list defines not only which postFx passes are included, but also in what order.
+The first pass in the list gets rendered first.
 
 ### Per Shader
+Example settings file:
 ```json
 {
     "fields": {
@@ -38,11 +44,19 @@ PostFX shaders are located inside the `your_pack/postFx` folder (note the upperc
 type | name | description
 -----|------|------------
 `texture0` | `backBuffer` | Contains the image currently on screen
-`texture1` | `prepassBuffer` | TODO
+`texture1` | `prepassBuffer` | TODO (seems related to decodeGBuffer stuff)
 `texture2` | `prepassDepthBuffer` | Contains the prepass depth buffer
 `texture3` | `rgba_noise_small` | Contains the RGBA noise small texture from shadertoy
  | | |
 `float` | `totalTime` | Time in seconds since shader was loaded
 `float` | `timeOfDay` | World time (0 = noon, 0.5 = midnight, 1.0 = noon the next day)
+`float2` | `resolution` | Window resolution
  | | |
 `float3` | `eyePosWorld` | Current position of the camera in world space
+`float4` | `rtParams0` | TODO
+
+##### Built-in Variables
+These variables don't require a uniform to be used, and are simply always available.
+type | name | description
+-----|------|------------
+`float4` | `projParams` | Holds data regarding the projection mapping. Can be used with decodeGBuffer to read normals/depth from the depth buffer.

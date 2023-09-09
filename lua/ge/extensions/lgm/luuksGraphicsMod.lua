@@ -87,6 +87,7 @@ local function drawUI()
         if #(pack.shaders) == 0 then im.Separator() end
 
         if im.Button("Reload shaderpacks") then
+            LuuksPostFX.updateEnabledShaders("None")
             LuuksPostFX.reloadShaders()
             LuuksPostFX.updateEnabledShaders(selectedPack)
         end

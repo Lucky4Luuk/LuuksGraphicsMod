@@ -30,6 +30,7 @@ local function updateUniforms(selectedPack, dt, settingsValues)
     totalTime = totalTime + dt
 
     local tod = core_environment.getTimeOfDay()
+    local res = core_settings_graphic.selected_resolution
 
     -- local camForward = core_camera.getForward()
     -- local camPosition = core_camera.getPosition()
@@ -41,7 +42,7 @@ local function updateUniforms(selectedPack, dt, settingsValues)
         if fx then
             fx:setShaderConst("$totalTime", totalTime)
             fx:setShaderConst("$timeOfDay", tod.time)
-            -- fx:setShaderConst("$camPos", camPosition)
+            fx:setShaderConst("$resolution", res)
 
             for field, value in pairs(settingsValues[shader.name] or {}) do
                 fx:setShaderConst("$" .. field, value)
@@ -60,7 +61,7 @@ local function removeOldShaders()
     end
 end
 
-local function loadShaderPostFX(path, name)
+local function loadShaderPostFX(path, name, priority)
     print("[LGM] Loading " .. name .. " (" .. path .. ")")
     local stateBlock = scenetree.findObject("LGM_" .. name .. "_StateBlock")
     if not stateBlock then
@@ -92,7 +93,7 @@ local function loadShaderPostFX(path, name)
         fx:setField("renderTime", 0, "PFXAfterDiffuse")
         -- fx:setField("renderTime", 0, "PFXBeforeBin")
         -- fx:setField("renderBin", 0, "AfterPostFX")
-        fx.renderPriority = 0.8
+        fx.renderPriority = priority
 
         fx:setField("stateBlock", 0, "LGM_" .. name .. "_StateBlock")
 
@@ -109,6 +110,78 @@ local function loadShaderPostFX(path, name)
     end
 end
 
+local function loadShaderPack(item)
+    local pack = { name = item, shaders = {}, settings = {} }
+
+    -- First we have to load the shaderpack settings file.
+    -- Without this file, the shaderpack will not be loaded!
+    local packSettingsPath = item .. "/settings.json"
+    if FS:fileExists(packSettingsPath) then
+        local handle = io.open(packSettingsPath, "r")
+        if handle then
+            local content = handle:read("*all")
+            pack.settings = json.decode(content) -- TODO: If this errors, loading the game breaks entirely. Find a fix for that
+            handle:close()
+        else
+            print("[LGM] The settings file exists, yet can't be opened!")
+            return
+        end
+    else
+        print("[LGM] Failed to load shaderpack from " .. item .. " as the settings.json file is missing!")
+        return
+    end
+
+    local postFxPasses = {}
+    local priority = 9999
+    for i, pass in pairs(pack.settings.postFx or {}) do
+        postFxPasses[pass] = priority
+        priority = priority - 1
+    end
+
+    if FS:directoryExists(item .. "/postFx") then
+        for j, file in pairs(FS:directoryList(item .. "/postFx")) do
+            if isFile(file) and ends_with(file, ".hlsl") then
+                local shaderName = split(file, "/")
+                shaderName = shaderName[#shaderName]:gsub(".hlsl", "")
+                local dispName = shaderName
+
+                -- We quickly check if this pass is used, so we can avoid doing
+                -- a bunch of extra work, plus we load the priority at the same time
+                local priority = postFxPasses[dispName]
+                if priority ~= nil then
+                    local fileHash = FS:hashFile(file)
+                    shaderName = shaderName .. fileHash
+
+                    local settingsPath = file:gsub(".hlsl", ".json")
+                    local shaderSettings = {}
+                    if FS:fileExists(settingsPath) then
+                        -- TODO: Should probably use FS:openFile() but I couldn't quickly figure out what args it wants
+                        local handle = io.open(settingsPath, "r")
+                        if handle then
+                            local content = handle:read("*all")
+                            shaderSettings = json.decode(content) -- TODO: If this errors, loading the game breaks entirely. Find a fix for that
+                            handle:close(handle)
+                        end
+                    end
+
+                    local shaderPath = file:gsub(rootPath, tempPath):gsub(".hlsl", fileHash .. ".hlsl")
+                    FS:copyFile(file, shaderPath)
+
+                    loadShaderPostFX(shaderPath, shaderName, priority)
+                    table.insert(pack.shaders, {
+                        name = shaderName,
+                        disp = dispName,
+                        path = shaderPath,
+                        category = "postFx",
+                        settings = shaderSettings
+                    })
+                end
+            end
+        end
+    end
+    LuuksPostFX.shaderPacks[item] = pack
+end
+
 local function loadShaders()
     print("Loading shaders from " .. rootPath .. "...")
     if not FS:directoryExists(rootPath) then FS:directoryCreate(rootPath) end
@@ -118,44 +191,7 @@ local function loadShaders()
 
     for i, item in pairs(FS:directoryList(rootPath)) do
         if not isFile(item) then
-            local pack = { name = item, shaders = {} }
-            if FS:directoryExists(item .. "/postFx") then
-                for j, file in pairs(FS:directoryList(item .. "/postFx")) do
-                    if isFile(file) and ends_with(file, ".hlsl") then
-                        local settingsPath = file:gsub(".hlsl", ".json")
-                        local shaderSettings = {}
-                        if FS:fileExists(settingsPath) then
-                            -- TODO: Should probably use FS:openFile() but I couldn't quickly figure out what args it wants
-                            local handle = io.open(settingsPath, "r")
-                            if handle then
-                                local content = handle:read("*all")
-                                print(content)
-                                shaderSettings = json.decode(content) -- TODO: If this errors, loading the game breaks entirely. Find a fix for that
-                                dump(shaderSettings)
-                                print("--------------------------------------------------------------------------")
-                                handle:close(handle)
-                            end
-                        end
-
-                        local fileHash = FS:hashFile(file)
-                        local shaderPath = file:gsub(rootPath, tempPath):gsub(".hlsl", fileHash .. ".hlsl")
-                        FS:copyFile(file, shaderPath)
-                        local shaderName = split(shaderPath, "/")
-                        shaderName = shaderName[#shaderName]:gsub(".hlsl", "")
-                        local dispName = shaderName
-                        shaderName = shaderName .. fileHash
-                        loadShaderPostFX(shaderPath, shaderName)
-                        table.insert(pack.shaders, {
-                            name = shaderName,
-                            disp = dispName,
-                            path = shaderPath,
-                            category = "postFx",
-                            settings = shaderSettings
-                        })
-                    end
-                end
-            end
-            LuuksPostFX.shaderPacks[item] = pack
+            loadShaderPack(item)
         end
     end
 
@@ -189,9 +225,9 @@ end
 local function reloadShaders()
     print("Reloading shaders...")
 
+    updateEnabledShaders("None")
     reloadShadersInternal()
     loadShaders()
-    updateEnabledShaders("None")
 end
 
 removeOldShaders()

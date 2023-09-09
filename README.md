@@ -7,6 +7,7 @@ A graphics mod for BeamNG, capable of loading custom shaderpacks.
 - MAYBE: Loading shaderpacks from zip files.
 
 ## Known Issues
+- Reloading the lua environment (ctrl + L) completely breaks the mod. The only fix seems to be restarting the game.
 - When reloading shaders, the uniforms won't update anymore. A temporary fix is to switch to a different shader, and reload shaders again, and then switch back.
 - Using a texture supplied by the mod, such as `rgba_noise_small`, might lead to absurdly long load times. More complicated shaders relying on sampling that texture might take minutes to load! If you happen to have this issue with a shader, feel free to send me a message on Discord (see [Support](#support)).
 
