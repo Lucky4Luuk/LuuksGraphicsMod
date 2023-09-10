@@ -61,7 +61,7 @@ local function removeOldShaders()
     end
 end
 
-local function loadShaderPostFX(path, name, priority)
+local function loadShaderPostFX(path, name, priority, texPath, textures)
     print("[LGM] Loading " .. name .. " (" .. path .. ")")
     local stateBlock = scenetree.findObject("LGM_" .. name .. "_StateBlock")
     if not stateBlock then
@@ -73,6 +73,9 @@ local function loadShaderPostFX(path, name, priority)
         stateBlock:setField("samplerStates", 1, "SamplerClampLinear")
         stateBlock:setField("samplerStates", 2, "SamplerClampLinear")
         stateBlock:setField("samplerStates", 3, "SamplerClampPoint")
+        for i, data in pairs(textures) do
+            stateBlock:setField("samplerStates", i, "SamplerClampLinear")
+        end
         stateBlock:registerObject("LGM_" .. name .. "_StateBlock")
     end
 
@@ -103,6 +106,12 @@ local function loadShaderPostFX(path, name, priority)
         fx:setField("texture", 1, "#prepass[RT0]")
         fx:setField("texture", 2, "#prepass[Depth]")
         fx:setField("texture", 3, "scripts/client/postFx/rgba_noise_small.dds")
+
+        -- Custom textures
+        for i, data in pairs(textures) do
+            local path = texPath .. data.path
+            fx:setField("texture", data.id, path)
+        end
 
         -- fx:setField("totalTime", 0, 0.0)
 
@@ -167,7 +176,9 @@ local function loadShaderPack(item)
                     local shaderPath = file:gsub(rootPath, tempPath):gsub(".hlsl", fileHash .. ".hlsl")
                     FS:copyFile(file, shaderPath)
 
-                    loadShaderPostFX(shaderPath, shaderName, priority)
+                    local texPath = item .. "/"
+
+                    loadShaderPostFX(shaderPath, shaderName, priority, texPath, shaderSettings.textures or {})
                     table.insert(pack.shaders, {
                         name = shaderName,
                         disp = dispName,

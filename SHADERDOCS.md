@@ -32,9 +32,15 @@ Example settings file:
             "max":  1.0,
             "default": 0.0
         }
+    },
+    "textures": {
+        "customLut": { "path": "path/to/file.dds", "id": 4 }
     }
 }
 ```
+The custom textures can be provided in .png format, but also as a .dds file.
+TODO: More information on compatible .dds formats.
+Keep in mind that the IDs must continue the ID sequence of already existing uniform texture IDs.
 
 ## Shader Passes
 ### PostFX
