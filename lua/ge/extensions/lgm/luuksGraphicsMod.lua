@@ -8,6 +8,9 @@ local showSettings = nil
 local selectedPack = settings.getValue("LGM_SelectedPack", "None")
 local settingsValues = {}
 
+local overrideFov = false
+local customFov = 60
+
 local function createPFX()
     if not LuuksPostFX then
         local pfx = require("/scripts/client/postFx/LuuksPostFX")
@@ -92,6 +95,19 @@ local function drawUI()
             LuuksPostFX.updateEnabledShaders(selectedPack)
         end
         im.Text("WARNING: If a shader doesn't work properly after\nreloading, please switch shaders, reload shaders again\nand switch back!")
+
+        local overridePtr = im.BoolPtr(overrideFov)
+        if im.Checkbox("Override FOV", overridePtr) then
+            overrideFov = overridePtr[0]
+        end
+
+        if overrideFov then
+            local ptr = im.FloatPtr(customFov)
+            if im.SliderFloat("FOV", ptr, 15.0, 135.0) then
+                customFov = ptr[0]
+                setCameraFov(customFov)
+            end
+        end
 
         im.End()
     end

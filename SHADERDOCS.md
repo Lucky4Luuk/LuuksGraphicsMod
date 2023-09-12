@@ -13,7 +13,8 @@ Example settings file:
     "postFx": [
         "pass1",
         "pass2"
-    ]
+    ],
+    "disableDefaultTonemapper": true
 }
 ```
 The `postFx` list defines not only which postFx passes are included, but also in what order.
@@ -35,12 +36,14 @@ Example settings file:
     },
     "textures": {
         "customLut": { "path": "path/to/file.dds", "id": 4 }
-    }
+    },
+    "customTarget": { "name": "lumBuffer", "scale": "0.4 0.4" }
 }
 ```
 The custom textures can be provided in .png format, but also as a .dds file.
 TODO: More information on compatible .dds formats.
 Keep in mind that the IDs must continue the ID sequence of already existing uniform texture IDs.
+TODO: Custom render target is not yet implemented!
 
 ## Shader Passes
 ### PostFX

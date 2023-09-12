@@ -13,12 +13,22 @@ local function ends_with(str, ending)
 end
 
 local function updateEnabledShaders(selectedPack)
+    scenetree.findObject("PostEffectCombinePassObject"):setField("enabled", 0, 1)
+
     for i, pack in pairs(LuuksPostFX.shaderPacks) do
         local enabled = pack.name == selectedPack
         for j, shader in pairs(pack.shaders) do
             local fx = scenetree.findObject("LGM_" .. shader.name .. "_Fx")
             if fx ~= nil then
                 fx.isEnabled = enabled
+            end
+        end
+
+        if enabled then
+            if pack.settings.disableDefaultTonemapper then
+                scenetree.findObject("PostEffectCombinePassObject"):setField("enabled", 0, 0)
+            else
+                scenetree.findObject("PostEffectCombinePassObject"):setField("enabled", 0, 1)
             end
         end
     end
@@ -93,9 +103,9 @@ local function loadShaderPostFX(path, name, priority, texPath, textures)
         fx = createObject("PostEffect")
         fx.isEnabled = false
         fx.allowReflectPass = false
-        fx:setField("renderTime", 0, "PFXAfterDiffuse")
-        -- fx:setField("renderTime", 0, "PFXBeforeBin")
-        -- fx:setField("renderBin", 0, "AfterPostFX")
+        -- fx:setField("renderTime", 0, "PFXAfterDiffuse")
+        fx:setField("renderTime", 0, "PFXBeforeBin")
+        fx:setField("renderBin", 0, "AfterPostFX")
         fx.renderPriority = priority
 
         fx:setField("stateBlock", 0, "LGM_" .. name .. "_StateBlock")
