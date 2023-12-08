@@ -92,7 +92,7 @@ local function loadShaderPostFX(path, name, priority, texPath, textures)
     local shader = scenetree.findObject("LGM_" .. name .. "_ShaderData")
     if not shader then
         shader = createObject("ShaderData")
-        shader.DXVertexShaderFile = "shaders/common/postFx/postFxV.hlsl"
+        shader.DXVertexShaderFile = "shaders/common/postFx/passthruV.hlsl"
         shader.DXPixelShaderFile = path
         shader.pixVersion = 2.0
         shader:registerObject("LGM_" .. name .. "_ShaderData")
