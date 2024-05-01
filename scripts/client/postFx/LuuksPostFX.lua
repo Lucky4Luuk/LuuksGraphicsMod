@@ -12,6 +12,23 @@ local function ends_with(str, ending)
     return ending == "" or str:sub(-#ending) == ending
 end
 
+local function enterLoadingScreen()
+    core_gamestate.requestEnterLoadingScreen("lgm_LoadingScreen", function() print("LGM Loading Screen Enabled") end)
+end
+
+local function exitLoadingScreen()
+    core_gamestate.requestExitLoadingScreen("lgm_LoadingScreen")
+end
+
+local function forceLightingQuality(level)
+    core_settings_graphic:getOptions().GraphicLightingQuality.set(level)
+end
+
+local function invalidateShaderCache()
+    -- This seems to do nothing
+    core_settings_settings.impl.invalidateCache()
+end
+
 local function updateEnabledShaders(selectedPack)
     scenetree.findObject("PostEffectCombinePassObject"):setField("enabled", 0, 1)
 
