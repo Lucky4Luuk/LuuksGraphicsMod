@@ -1,2 +1,1 @@
-load("lgm_luuksGraphicsMod")
-registerCoreModule("lgm/luuksGraphicsMod")
+setExtensionUnloadMode("luuksGraphicsMod", "manual")
