@@ -60,7 +60,7 @@ local function updateUniforms(selectedPack, dt, settingsValues)
     local res = core_settings_graphic.selected_resolution
 
     -- local camForward = core_camera.getForward()
-    -- local camPosition = core_camera.getPosition()
+    local camPosition = core_camera.getPosition()
     -- camPosition = { x = camPosition.x, y = camPosition.y, z = camPosition.z }
     -- local camFovDeg = core_camera.getFovDeg()
 
@@ -70,6 +70,8 @@ local function updateUniforms(selectedPack, dt, settingsValues)
             fx:setShaderConst("$totalTime", totalTime)
             fx:setShaderConst("$timeOfDay", tod.time)
             fx:setShaderConst("$resolution", res)
+
+            fx:setShaderConst("$eyePosWorld", tostring(camPosition.x) .. " " .. tostring(camPosition.y) .. " " .. tostring(camPosition.z))
 
             for field, value in pairs(settingsValues[shader.name] or {}) do
                 fx:setShaderConst("$" .. field, value)
@@ -109,7 +111,8 @@ local function loadShaderPostFX(path, name, priority, texPath, textures)
     local shader = scenetree.findObject("LGM_" .. name .. "_ShaderData")
     if not shader then
         shader = createObject("ShaderData")
-        shader.DXVertexShaderFile = "shaders/common/postFx/passthruV.hlsl"
+        -- shader.DXVertexShaderFile = "shaders/common/postFx/passthruV.hlsl"
+        shader.DXVertexShaderFile = "scripts/client/postFx/passthruVfixed.hlsl"
         shader.DXPixelShaderFile = path
         shader.pixVersion = 2.0
         shader:registerObject("LGM_" .. name .. "_ShaderData")
